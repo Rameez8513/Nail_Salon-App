@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "798948239402",
+    "project_id": "nail-salon-2fef5",
+    "storage_bucket": "nail-salon-2fef5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:798948239402:android:0b0cdfc4c031dfec227b53",
+        "android_client_info": {
+          "package_name": "com.example.nail_salon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBez79Rjk-vi52quYzLeLTInaqRp5h8B0c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
