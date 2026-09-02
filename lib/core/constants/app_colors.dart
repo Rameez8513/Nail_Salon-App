@@ -13,9 +13,9 @@ class AppColors {
   static const Color textDark = Color(0xFF1C1C1E);
   static const Color textGrey = Color(0xFF8E8E93);
   static const Color border = Color(0xFFE5E5EA);
-  static const Color error = Color(0xFFFF453A);
+  static const Color error = Color(0xFF7A2E2E);
   static const Color success = Color(0xFF34C759);
-  static const Color warning = Color(0xFFFF9F0A);
+  static const Color warning = Color(0xFFB8863B);
 
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF2C2C2E), Color(0xFF000000)],

@@ -9,6 +9,7 @@ import '../../appointments/screens/appointment_history_screen.dart';
 import 'currency_selection_screen.dart';
 import 'language_selection_screen.dart';
 import '../../employee/screens/employees_screen.dart';
+import '../../../core/routes/fade_route.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -211,11 +212,9 @@ class SettingsScreen extends StatelessWidget {
                     icon: Icons.calendar_today_outlined,
                     title: AppStrings.t('history'),
                     subtitle: AppStrings.t('historyDesc'),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const AppointmentHistoryScreen(),
-                      ),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(FadeRoute(page: const AppointmentHistoryScreen())),
                     isLast: true,
                   ),
                   _SectionHeader(AppStrings.t('team')),
@@ -223,11 +222,9 @@ class SettingsScreen extends StatelessWidget {
                     icon: Icons.badge_outlined,
                     title: AppStrings.t('employees'),
                     subtitle: AppStrings.t('employeesDesc'),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const EmployeesScreen(),
-                      ),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(FadeRoute(page: const EmployeesScreen())),
                     isLast: true,
                   ),
                   _SectionHeader(AppStrings.t('about')),

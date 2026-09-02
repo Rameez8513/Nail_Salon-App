@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/services/firestore_service.dart';
+import '../../../core/providers/app_settings_provider.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/fade_slide_in.dart';
 import '../../../core/routes/slide_up_route.dart';
+import '../../../core/routes/fade_route.dart';
 import '../../../models/appointment_model.dart';
 import '../../../models/employee_model.dart';
 import '../widgets/date_strip.dart';
@@ -59,7 +62,7 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
   void _openHistory() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const AppointmentHistoryScreen()));
+    ).push(FadeRoute(page: const AppointmentHistoryScreen()));
   }
 
   void _shiftWeek(int delta) {
@@ -95,6 +98,8 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AppSettingsProvider>();
+    final locale = AppStrings.currentLanguage;
     final isToday = DateFormat('yyyy-MM-dd').format(DateTime.now()) == _dateKey;
     final weekEnd = _weekStart.add(const Duration(days: 6));
 
@@ -112,12 +117,12 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _EmployeeTabsBar(
             selectedEmployeeId: _selectedEmployeeId,
             onSelected: (id) => setState(() => _selectedEmployeeId = id),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _ViewToggle(
@@ -143,12 +148,12 @@ class _SchedulesScreenState extends State<SchedulesScreen> {
                   child: Text(
                     _viewMode == ScheduleViewMode.day
                         ? (isToday
-                              ? '${AppStrings.t('today')} ${DateFormat('MMMM d', AppStrings.currentLanguage).format(_selectedDate)}'
+                              ? '${AppStrings.t('today')} ${DateFormat('MMMM d', locale).format(_selectedDate)}'
                               : DateFormat(
                                   'EEE, MMMM d',
-                                  AppStrings.currentLanguage,
+                                  locale,
                                 ).format(_selectedDate))
-                        : '${DateFormat('MMM d', AppStrings.currentLanguage).format(_weekStart)} – ${DateFormat('MMM d, yyyy', AppStrings.currentLanguage).format(weekEnd)}',
+                        : '${DateFormat('MMM d', locale).format(_weekStart)} – ${DateFormat('MMM d, yyyy', locale).format(weekEnd)}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 15,
@@ -327,13 +332,15 @@ class _EmployeeTabsBar extends StatelessWidget {
             .toList();
 
         return SizedBox(
-          height: 40,
+          height: 56,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
               _EmployeeChip(
                 label: AppStrings.t('general'),
+                role: null,
+                isGeneral: true,
                 isSelected: selectedEmployeeId == null,
                 onTap: () => onSelected(null),
               ),
@@ -343,6 +350,8 @@ class _EmployeeTabsBar extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: _EmployeeChip(
                     label: employee.name,
+                    role: employee.role,
+                    isGeneral: false,
                     isSelected: selectedEmployeeId == employee.id,
                     onTap: () => onSelected(employee.id),
                   ),
@@ -358,38 +367,101 @@ class _EmployeeTabsBar extends StatelessWidget {
 
 class _EmployeeChip extends StatelessWidget {
   final String label;
+  final String? role;
+  final bool isGeneral;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _EmployeeChip({
     required this.label,
+    required this.role,
+    required this.isGeneral,
     required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasRole = !isGeneral && role != null && role!.isNotEmpty;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: isSelected ? null : AppColors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? Colors.transparent : AppColors.border,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textDark,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isGeneral)
+              Icon(
+                Icons.groups_outlined,
+                size: 18,
+                color: isSelected ? Colors.white : AppColors.textGrey,
+              )
+            else
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.2)
+                      : AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  label.isNotEmpty ? label[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                if (hasRole)
+                  Text(
+                    role!,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white.withOpacity(0.75)
+                          : AppColors.textGrey,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );

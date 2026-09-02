@@ -58,7 +58,7 @@ class AppStrings {
       'es': 'Correo o contraseña inválidos',
     },
 
-    'appName': {'en': 'Nail Salon', 'es': 'Salón de Uñas'},
+    'appName': {'en': 'Aura Salon', 'es': ' Aura Salon'},
     'clients': {'en': 'Clients', 'es': 'Clientes'},
     'services': {'en': 'Services', 'es': 'Servicios'},
     'inventory': {'en': 'Inventory', 'es': 'Inventario'},
@@ -308,6 +308,9 @@ class AppStrings {
     'inStock': {'en': 'In stock', 'es': 'En stock'},
     'lowStock': {'en': 'Low stock', 'es': 'Stock bajo'},
     'outOfStock': {'en': 'Out of stock', 'es': 'Agotado'},
+    'call': {'en': 'Call', 'es': 'Llamar'},
+    'whatsapp': {'en': 'WhatsApp', 'es': 'WhatsApp'},
+    'serviceItemsTitle': {'en': 'SERVICE(S)', 'es': 'SERVICIO(S)'},
 
     'signedIn': {'en': 'Signed in', 'es': 'Sesión iniciada'},
     'unknown': {'en': 'Unknown', 'es': 'Desconocido'},

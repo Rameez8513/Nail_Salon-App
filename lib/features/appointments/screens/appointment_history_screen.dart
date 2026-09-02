@@ -36,12 +36,9 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _historyStream,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
+          final isLoading =
+              snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData;
           final docs = snapshot.data?.docs ?? [];
           final all = docs
               .map(
@@ -131,6 +128,14 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen> {
                   ),
                 ),
               ),
+              if (isLoading)
+                const SliverToBoxAdapter(
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    color: AppColors.primary,
+                    backgroundColor: AppColors.border,
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),

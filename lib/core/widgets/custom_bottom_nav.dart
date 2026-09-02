@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/app_settings_provider.dart';
 
 class NavItem {
   final IconData icon;
@@ -29,7 +27,6 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppSettingsProvider>();
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -61,28 +58,36 @@ class CustomBottomNav extends StatelessWidget {
                       children: [
                         AnimatedScale(
                           duration: const Duration(milliseconds: 200),
-                          scale: isSelected ? 1.15 : 1.0,
+                          scale: isSelected ? 1.12 : 1.0,
                           child: Icon(
                             isSelected ? item.activeIcon : item.icon,
                             color: isSelected
                                 ? AppColors.primary
                                 : AppColors.textGrey,
-                            size: 24,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textGrey,
+                        const SizedBox(height: 3),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textGrey,
+                            ),
+                            child: Text(
+                              item.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          child: Text(item.label),
                         ),
                       ],
                     ),

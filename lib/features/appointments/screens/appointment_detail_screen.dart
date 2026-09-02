@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/services/firestore_service.dart';
+import '../../../core/providers/app_settings_provider.dart';
 import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/appointment_model.dart';
 import 'new_appointment_screen.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/app_settings_provider.dart';
-import '../../../core/constants/app_strings.dart';
 
 class AppointmentDetailScreen extends StatelessWidget {
   final AppointmentModel appointment;
@@ -30,14 +30,14 @@ class AppointmentDetailScreen extends StatelessWidget {
   Future<void> _cancelAppointment(BuildContext context) async {
     final confirmed = await ConfirmDeleteDialog.show(
       context,
-      itemName: 'this appointment',
+      itemName: AppStrings.t('deleteAppointment'),
     );
     if (!confirmed) return;
 
     FirestoreService.instance.deleteAppointment(appointment.id);
 
     Navigator.of(context).pop();
-    AppSnackbar.show(context, 'Appointment cancelled');
+    AppSnackbar.show(context, AppStrings.t('appointmentCancelled'));
   }
 
   Future<void> _callClient(BuildContext context, String phone) async {
@@ -45,7 +45,11 @@ class AppointmentDetailScreen extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else if (context.mounted) {
-      AppSnackbar.show(context, 'Could not open phone dialer', isError: true);
+      AppSnackbar.show(
+        context,
+        AppStrings.t('couldNotOpenPhoneDialer'),
+        isError: true,
+      );
     }
   }
 
@@ -55,7 +59,11 @@ class AppointmentDetailScreen extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (context.mounted) {
-      AppSnackbar.show(context, 'Could not open WhatsApp', isError: true);
+      AppSnackbar.show(
+        context,
+        AppStrings.t('couldNotOpenWhatsApp'),
+        isError: true,
+      );
     }
   }
 
@@ -74,6 +82,8 @@ class AppointmentDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     context.watch<AppSettingsProvider>();
+    final locale = AppStrings.currentLanguage;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: FutureBuilder<_ClientContact>(
@@ -162,7 +172,7 @@ class AppointmentDetailScreen extends StatelessWidget {
                             Expanded(
                               child: _ActionPill(
                                 icon: Icons.call,
-                                label: 'Call',
+                                label: AppStrings.t('call'),
                                 color: AppColors.primary,
                                 onTap: () => _callClient(context, phone),
                               ),
@@ -171,7 +181,7 @@ class AppointmentDetailScreen extends StatelessWidget {
                             Expanded(
                               child: _ActionPill(
                                 icon: Icons.chat,
-                                label: 'WhatsApp',
+                                label: AppStrings.t('whatsapp'),
                                 color: const Color(0xFF25D366),
                                 onTap: () => _openWhatsApp(context, phone),
                               ),
@@ -184,20 +194,21 @@ class AppointmentDetailScreen extends StatelessWidget {
                         children: [
                           _InfoRow(
                             icon: Icons.calendar_today_outlined,
-                            label: 'Date',
+                            label: AppStrings.t('date'),
                             value: DateFormat(
                               'EEE, MMM d',
+                              locale,
                             ).format(appointment.startTime),
                           ),
                           _InfoRow(
                             icon: Icons.access_time_rounded,
-                            label: 'Hour',
+                            label: AppStrings.t('hour'),
                             value:
-                                '${DateFormat('h:mm a', AppStrings.currentLanguage).format(appointment.startTime)} – ${DateFormat('h:mm a', AppStrings.currentLanguage).format(appointment.endTime)}',
+                                '${DateFormat('h:mm a', locale).format(appointment.startTime)} – ${DateFormat('h:mm a', locale).format(appointment.endTime)}',
                           ),
                           _InfoRow(
                             icon: Icons.timer_outlined,
-                            label: 'Duration',
+                            label: AppStrings.t('duration'),
                             value: '${appointment.totalDurationMinutes} min',
                             isLast: true,
                           ),
@@ -205,7 +216,7 @@ class AppointmentDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                       _InfoCard(
-                        title: 'SERVICE(S)',
+                        title: AppStrings.t('serviceItemsTitle'),
                         titleIcon: Icons.content_cut_outlined,
                         children: [
                           Wrap(
@@ -236,18 +247,18 @@ class AppointmentDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                       _InfoCard(
-                        title: 'PAYMENT',
+                        title: AppStrings.t('payment'),
                         titleIcon: Icons.credit_card,
                         children: [
                           _InfoRow(
                             icon: Icons.attach_money,
-                            label: 'Total',
+                            label: AppStrings.t('total'),
                             value: '\$${appointment.total.toStringAsFixed(2)}',
                             bold: true,
                           ),
                           _InfoRow(
                             icon: Icons.payments_outlined,
-                            label: 'Payment Method',
+                            label: AppStrings.t('paymentMethod'),
                             value: appointment.paymentMethod,
                             isLast: true,
                           ),
@@ -257,7 +268,7 @@ class AppointmentDetailScreen extends StatelessWidget {
                           appointment.notes!.isNotEmpty) ...[
                         const SizedBox(height: 14),
                         _InfoCard(
-                          title: 'NOTES',
+                          title: AppStrings.t('notes2'),
                           titleIcon: Icons.notes,
                           children: [
                             Text(
@@ -270,12 +281,12 @@ class AppointmentDetailScreen extends StatelessWidget {
                       const SizedBox(height: 28),
                       ElevatedButton(
                         onPressed: () => _editAppointment(context),
-                        child: const Text('Edit'),
+                        child: Text(AppStrings.t('edit')),
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: () => _cancelAppointment(context),
-                        child: const Text('Cancel'),
+                        child: Text(AppStrings.t('cancel')),
                       ),
                     ],
                   ),
@@ -309,7 +320,6 @@ class _ActionPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppSettingsProvider>();
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(14),
@@ -348,7 +358,6 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppSettingsProvider>();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -408,7 +417,6 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppSettingsProvider>();
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
       child: Row(
