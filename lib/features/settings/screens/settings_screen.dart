@@ -10,6 +10,8 @@ import 'currency_selection_screen.dart';
 import 'language_selection_screen.dart';
 import '../../employee/screens/employees_screen.dart';
 import '../../../core/routes/fade_route.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/widgets/rate_app_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -233,13 +235,13 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: Colors.amber,
                     title: AppStrings.t('rateApp'),
                     subtitle: AppStrings.t('rateAppDesc'),
-                    onTap: () {},
+                    onTap: () => RateAppDialog.show(context),
                   ),
                   _SettingsTile(
                     icon: Icons.share_outlined,
                     title: AppStrings.t('shareApp'),
                     subtitle: AppStrings.t('shareAppDesc'),
-                    onTap: () {},
+                    onTap: () => Share.share(AppStrings.t('shareAppMessage')),
                     isLast: true,
                   ),
                 ],

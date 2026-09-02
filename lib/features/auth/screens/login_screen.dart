@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/routes/app_routes.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/app_settings_provider.dart';
+import '../../../core/widgets/connectivity_service.dart';
+import '../../../core/widgets/credentials_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = true;
   String? _errorMessage;
 
   @override
@@ -40,6 +41,17 @@ class _LoginScreenState extends State<LoginScreen>
           CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
         );
     _animController.forward();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final saved = await CredentialsService.load();
+    if (saved != null && mounted) {
+      setState(() {
+        _emailController.text = saved['email']!;
+        _passwordController.text = saved['password']!;
+      });
+    }
   }
 
   @override
@@ -58,41 +70,56 @@ class _LoginScreenState extends State<LoginScreen>
       _errorMessage = null;
     });
 
+    final isOnline = await ConnectivityService.isOnline();
+    if (!isOnline) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = AppStrings.t('noInternetConnection');
+      });
+      return;
+    }
+
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      if (_rememberMe) {
+        await CredentialsService.save(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+      } else {
+        await CredentialsService.clear();
+      }
+
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on FirebaseAuthException {
-      setState(() {
-        _errorMessage = AppStrings.t('invalidCredentials');
-      });
+      setState(() => _errorMessage = AppStrings.t('invalidCredentials'));
+    } catch (_) {
+      final stillOnline = await ConnectivityService.isOnline();
+      setState(
+        () => _errorMessage = stillOnline
+            ? AppStrings.t('invalidCredentials')
+            : AppStrings.t('noInternetConnection'),
+      );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppSettingsProvider>();
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: Stack(
         children: [
           Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppColors.primaryGradient,
             ),
           ),
           Positioned(
@@ -102,19 +129,31 @@ class _LoginScreenState extends State<LoginScreen>
               width: 160,
               height: 160,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withOpacity(0.06),
                 shape: BoxShape.circle,
               ),
             ),
           ),
           Positioned(
-            top: 60,
-            left: -30,
+            bottom: -60,
+            left: -50,
             child: Container(
-              width: 100,
-              height: 100,
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withOpacity(0.04),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 100,
+            left: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
             ),
@@ -135,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen>
                         borderRadius: BorderRadius.circular(22),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withOpacity(0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -150,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 20),
                     Text(
                       AppStrings.t('appName'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -210,12 +249,10 @@ class _LoginScreenState extends State<LoginScreen>
                                       size: 20,
                                     ),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.trim().isEmpty) {
-                                      return AppStrings.t('emailRequired');
-                                    }
-                                    return null;
-                                  },
+                                  validator: (value) =>
+                                      (value == null || value.trim().isEmpty)
+                                      ? AppStrings.t('emailRequired')
+                                      : null,
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
@@ -243,39 +280,87 @@ class _LoginScreenState extends State<LoginScreen>
                                         color: AppColors.textGrey,
                                         size: 20,
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
                                     ),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return AppStrings.t('passwordRequired');
-                                    }
-                                    return null;
-                                  },
+                                  validator: (value) =>
+                                      (value == null || value.isEmpty)
+                                      ? AppStrings.t('passwordRequired')
+                                      : null,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: Checkbox(
+                                        value: _rememberMe,
+                                        activeColor: AppColors.primary,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        onChanged: (value) => setState(
+                                          () => _rememberMe = value ?? true,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      AppStrings.t('rememberMe'),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textGrey,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 AnimatedSize(
                                   duration: const Duration(milliseconds: 200),
                                   child: _errorMessage != null
                                       ? Padding(
                                           padding: const EdgeInsets.only(
-                                            top: 14,
+                                            top: 10,
                                           ),
-                                          child: Text(
-                                            _errorMessage!,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              color: AppColors.error,
-                                              fontSize: 13,
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.error
+                                                  .withOpacity(0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.error_outline,
+                                                  color: AppColors.error,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    _errorMessage!,
+                                                    style: const TextStyle(
+                                                      color: AppColors.error,
+                                                      fontSize: 12.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         )
                                       : const SizedBox.shrink(),
                                 ),
-                                const SizedBox(height: 28),
+                                const SizedBox(height: 24),
                                 ElevatedButton(
                                   onPressed: _isLoading ? null : _handleLogin,
                                   child: _isLoading
@@ -288,6 +373,40 @@ class _LoginScreenState extends State<LoginScreen>
                                           ),
                                         )
                                       : Text(AppStrings.t('login')),
+                                ),
+                                const SizedBox(height: 28),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(color: AppColors.border),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Icon(
+                                        Icons.spa_outlined,
+                                        color: AppColors.textGrey.withOpacity(
+                                          0.4,
+                                        ),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(color: AppColors.border),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                Text(
+                                  AppStrings.t('appName'),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textGrey.withOpacity(0.5),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ],
                             ),

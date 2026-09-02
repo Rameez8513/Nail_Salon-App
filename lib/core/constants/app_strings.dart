@@ -359,6 +359,28 @@ class AppStrings {
     },
     'general': {'en': 'General', 'es': 'General'},
     'team': {'en': 'TEAM', 'es': 'EQUIPO'},
+    'rateThisApp': {'en': 'Rate This App', 'es': 'Califica Esta App'},
+    'rateThisAppDesc': {
+      'en': 'How would you rate your experience?',
+      'es': '¿Cómo calificarías tu experiencia?',
+    },
+    'thanksForRating': {
+      'en': 'Thanks for your feedback!',
+      'es': '¡Gracias por tu opinión!',
+    },
+    'submit': {'en': 'Submit', 'es': 'Enviar'},
+    'shareAppMessage': {
+      'en':
+          'Check out Nail Salon — the app I use to manage my salon appointments, clients, and inventory!',
+      'es':
+          '¡Mira Salón de Uñas — la app que uso para gestionar mis citas, clientes e inventario!',
+    },
+    'noInternetConnection': {
+      'en': 'No internet connection. Please check your network.',
+      'es': 'Sin conexión a internet. Verifica tu red.',
+    },
+    'rememberMe': {'en': 'Remember me', 'es': 'Recordarme'},
+    'welcomeBackName': {'en': 'Welcome back', 'es': 'Bienvenido de nuevo'},
   };
 
   static const Map<String, List<String>> _monthNames = {
