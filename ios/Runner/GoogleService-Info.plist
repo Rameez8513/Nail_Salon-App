@@ -26,5 +26,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:798948239402:ios:7d47e24b3a2c33ef227b53</string>
+	<key>DATABASE_URL</key>
+	<string>https://nail-salon-2fef5-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>
