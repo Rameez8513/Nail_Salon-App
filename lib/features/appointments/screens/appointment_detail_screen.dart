@@ -40,11 +40,27 @@ class AppointmentDetailScreen extends StatelessWidget {
     AppSnackbar.show(context, AppStrings.t('appointmentCancelled'));
   }
 
+  /// Normalizes a raw stored phone number for use in tel:/wa.me links.
+  /// If the number is a bare 10-digit local number (no country code),
+  /// assumes Mexico and prepends "52" — covers the common case where
+  /// staff entered a client's number without the country code.
+  String _normalizePhone(String phone) {
+    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digitsOnly.length == 10) {
+      return '52$digitsOnly';
+    }
+    return digitsOnly;
+  }
+
   Future<void> _callClient(BuildContext context, String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
+    final normalized = _normalizePhone(phone);
+    debugPrint('CALL attempt — raw phone: "$phone", normalized: "$normalized"');
+    final uri = Uri(scheme: 'tel', path: '+$normalized');
+    debugPrint('CALL uri: $uri');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else if (context.mounted) {
+      debugPrint('CALL FAILED — canLaunchUrl returned false');
       AppSnackbar.show(
         context,
         AppStrings.t('couldNotOpenPhoneDialer'),
@@ -54,11 +70,18 @@ class AppointmentDetailScreen extends StatelessWidget {
   }
 
   Future<void> _openWhatsApp(BuildContext context, String phone) async {
-    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    final uri = Uri.parse('https://wa.me/$digitsOnly');
-    if (await canLaunchUrl(uri)) {
+    final normalized = _normalizePhone(phone);
+    debugPrint(
+      'WHATSAPP attempt — raw phone: "$phone", normalized: "$normalized" (length: ${normalized.length})',
+    );
+    final uri = Uri.parse('https://wa.me/$normalized');
+    debugPrint('WHATSAPP uri: $uri');
+    final canOpen = await canLaunchUrl(uri);
+    debugPrint('WHATSAPP canLaunchUrl result: $canOpen');
+    if (canOpen) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (context.mounted) {
+      debugPrint('WHATSAPP FAILED — canLaunchUrl returned false');
       AppSnackbar.show(
         context,
         AppStrings.t('couldNotOpenWhatsApp'),
@@ -73,6 +96,7 @@ class AppointmentDetailScreen extends StatelessWidget {
         appointment.clientId,
       );
       final data = doc.data() as Map<String, dynamic>?;
+      debugPrint('Loaded client phone from Firestore: "${data?['phone']}"');
       return _ClientContact(phone: data?['phone']);
     } catch (_) {
       return _ClientContact(phone: null);
